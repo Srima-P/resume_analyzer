@@ -1,0 +1,47 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# Database files
+*.db
+*.sqlite3
+
+# FastAPI / uploads (important for your project)
+uploads/
+temp/
+*.pdf
+
+# Node modules (if frontend exists)
+node_modules/
+
+# Build folders (frontend)
+dist/
+build/
+
+# Coverage / testing
+.coverage
+htmlcov/
+
+# Misc
+*.swp

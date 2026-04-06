@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeIQ — Upload Resume</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body class="app-page">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="url(#bg2)"/>
+        <path d="M10 26L18 10L26 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13 21H23" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <defs><linearGradient id="bg2" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6c63ff"/><stop offset="1" stop-color="#a855f7"/>
+        </linearGradient></defs>
+      </svg>
+      <span>ResumeIQ</span>
+    </div>
+    <div class="nav-links">
+      <span class="nav-badge candidate-badge">Candidate</span>
+    </div>
+    <button class="btn-ghost" onclick="logout()">Sign Out</button>
+  </nav>
+
+  <div class="page-content">
+    <!-- HERO -->
+    <div class="upload-hero">
+      <h1 class="page-title">Upload Your <span class="grad-text">Resume</span></h1>
+      <p class="page-sub">We'll analyze your resume, score it, and match you with opportunities</p>
+    </div>
+
+    <!-- UPLOAD ZONE -->
+    <div class="card upload-card">
+      <div class="dropzone" id="dropzone"
+        ondragover="event.preventDefault(); this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)">
+        <div class="drop-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="14" fill="rgba(108,99,255,0.1)"/>
+            <path d="M16 30V34H32V30" stroke="#6c63ff" stroke-width="2" stroke-linecap="round"/>
+            <path d="M24 26V18" stroke="#6c63ff" stroke-width="2" stroke-linecap="round"/>
+            <path d="M20 22L24 18L28 22" stroke="#6c63ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="drop-title">Drag &amp; drop your PDF here</p>
+        <p class="drop-sub">or click to browse</p>
+        <input type="file" id="resumeFile" accept=".pdf" style="display:none" onchange="fileSelected(this)"/>
+        <button class="btn-outline" onclick="document.getElementById('resumeFile').click()">Browse File</button>
+      </div>
+
+      <div id="filePreview" class="file-preview" style="display:none">
+        <div class="file-icon">📄</div>
+        <div class="file-info">
+          <span class="file-name" id="fileName"></span>
+          <span class="file-size" id="fileSize"></span>
+        </div>
+        <button class="btn-remove" onclick="removeFile()">✕</button>
+      </div>
+
+      <div id="uploadAlert" class="alert" style="display:none"></div>
+
+      <button class="btn-primary btn-full" id="uploadBtn" onclick="uploadResume()" style="display:none">
+        <span id="uploadText">Analyze Resume</span>
+        <div id="uploadSpinner" class="spinner" style="display:none"></div>
+      </button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" class="results-section" style="display:none">
+
+      <div class="results-header">
+        <h2 class="section-title">Analysis Results</h2>
+        <div class="score-badge-big" id="scoreBig"></div>
+      </div>
+
+      <div class="results-grid">
+
+        <!-- CGPA -->
+        <div class="card result-card">
+          <div class="rc-icon">🎓</div>
+          <div class="rc-label">CGPA</div>
+          <div class="rc-value" id="resCgpa">—</div>
+        </div>
+
+        <!-- SKILLS -->
+        <div class="card result-card skills-card">
+          <div class="rc-icon">⚡</div>
+          <div class="rc-label">Detected Skills</div>
+          <div id="resSkills" class="tags-wrap"></div>
+        </div>
+
+        <!-- CERTIFICATIONS -->
+        <div class="card result-card">
+          <div class="rc-icon">🏆</div>
+          <div class="rc-label">Certifications</div>
+          <div id="resCerts" class="tags-wrap"></div>
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="card result-card">
+          <div class="rc-icon">🚀</div>
+          <div class="rc-label">Projects</div>
+          <div id="resProjects" class="tags-wrap"></div>
+        </div>
+
+      </div>
+
+      <!-- SCORE BREAKDOWN -->
+      <div class="card score-breakdown">
+        <h3 class="rc-label" style="margin-bottom:16px">Score Breakdown</h3>
+        <div class="score-bar-wrap">
+          <span class="score-bar-label">Overall Score</span>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" id="scoreBarFill"></div>
+          </div>
+          <span class="score-bar-num" id="scoreBarNum"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    guardAuth('candidate');
+
+    function fileSelected(input) {
+      if (input.files[0]) showFile(input.files[0]);
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type === 'application/pdf') {
+        document.getElementById('resumeFile').files; // can't assign, use DataTransfer trick
+        showFile(f);
+        window._dropFile = f;
+      }
+    }
+    function showFile(f) {
+      document.getElementById('dropzone').style.display = 'none';
+      document.getElementById('filePreview').style.display = 'flex';
+      document.getElementById('fileName').textContent = f.name;
+      document.getElementById('fileSize').textContent = (f.size/1024).toFixed(1) + ' KB';
+      document.getElementById('uploadBtn').style.display = 'flex';
+    }
+    function removeFile() {
+      document.getElementById('dropzone').style.display = 'flex';
+      document.getElementById('filePreview').style.display = 'none';
+      document.getElementById('uploadBtn').style.display = 'none';
+      document.getElementById('resumeFile').value = '';
+      window._dropFile = null;
+    }
+
+    async function uploadResume() {
+      const fileInput = document.getElementById('resumeFile');
+      const file = window._dropFile || fileInput.files[0];
+      const alertEl = document.getElementById('uploadAlert');
+      alertEl.style.display = 'none';
+
+      if (!file) { alertEl.textContent='No file selected.'; alertEl.className='alert alert-error'; alertEl.style.display='flex'; return; }
+
+      setLoading('uploadBtn','uploadText','uploadSpinner', true, 'Analyzing…');
+
+      const fd = new FormData();
+      fd.append('file', file);
+
+      try {
+        const res = await fetch(`${API}/upload_resume`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          body: fd
+        });
+        const data = await res.json();
+
+        alertEl.textContent = '✓ Resume analyzed successfully!';
+        alertEl.className = 'alert alert-success';
+        alertEl.style.display = 'flex';
+        setLoading('uploadBtn','uploadText','uploadSpinner', false, 'Analyze Resume');
+        showResults(data);
+      } catch(e) {
+        alertEl.textContent = 'Upload failed. Check backend connection.';
+        alertEl.className = 'alert alert-error';
+        alertEl.style.display = 'flex';
+        setLoading('uploadBtn','uploadText','uploadSpinner', false, 'Analyze Resume');
+      }
+    }
+
+    function showResults(data) {
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('results').scrollIntoView({behavior:'smooth'});
+
+      const score = data.score || 0;
+      document.getElementById('scoreBig').textContent = score + '/100';
+      document.getElementById('scoreBig').style.background = score >= 70 ? 'rgba(67,233,123,0.15)' : score >= 40 ? 'rgba(245,200,66,0.15)' : 'rgba(255,101,132,0.15)';
+      document.getElementById('scoreBig').style.color = score >= 70 ? '#43e97b' : score >= 40 ? '#f5c842' : '#ff6584';
+
+      document.getElementById('resCgpa').textContent = data.cgpa || '—';
+
+      renderTags('resSkills', data.skills || []);
+      renderTags('resCerts', data.certifications || []);
+
+      const projects = data.projects || {};
+      const projArr = typeof projects === 'object' && !Array.isArray(projects)
+        ? Object.entries(projects).map(([k,v])=>`${k} (${v})`)
+        : (Array.isArray(projects) ? projects : []);
+      renderTags('resProjects', projArr, '#a855f7');
+
+      const pct = Math.min(score, 100);
+      document.getElementById('scoreBarFill').style.width = pct + '%';
+      document.getElementById('scoreBarFill').style.background = score >= 70 ? 'linear-gradient(90deg,#43e97b,#38f9d7)' : score >= 40 ? 'linear-gradient(90deg,#f5c842,#f7971e)' : 'linear-gradient(90deg,#ff6584,#ff9a9e)';
+      document.getElementById('scoreBarNum').textContent = score + '/100';
+    }
+  </script>
+</body>
+</html>
