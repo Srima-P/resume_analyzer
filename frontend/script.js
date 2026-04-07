@@ -13,7 +13,7 @@ function guardAuth(requiredRole) {
 function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('role');
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
 }
 
 // ── AUTH FETCH ──
