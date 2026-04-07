@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeIQ — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body class="login-page">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="brand-icon">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="10" fill="url(#bg)"/>
+          <path d="M10 26L18 10L26 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 21H23" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <defs><linearGradient id="bg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6c63ff"/><stop offset="1" stop-color="#a855f7"/>
+          </linearGradient></defs>
+        </svg>
+      </div>
+      <span class="brand-name">ResumeIQ</span>
+    </div>
+
+    <div class="login-card">
+      <h1 class="login-title">Welcome back</h1>
+      <p class="login-sub">Sign in to continue to your dashboard</p>
+
+      <div id="errorMsg" class="alert alert-error" style="display:none"></div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" id="username" class="form-input" placeholder="Enter your username" autocomplete="username"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="password" class="form-input" placeholder="Enter your password" autocomplete="current-password"/>
+          <button class="toggle-pass" onclick="togglePass()" type="button">
+            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="role-hint">
+        <div class="hint-badge">
+          <span class="dot dot-purple"></span>
+          <span>Interviewer: username <code>admin</code> / password <code>admin123</code></span>
+        </div>
+        <div class="hint-badge">
+          <span class="dot dot-green"></span>
+          <span>Candidate: any username &amp; password</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="login()" id="loginBtn">
+        <span id="loginText">Sign In</span>
+        <div id="loginSpinner" class="spinner" style="display:none"></div>
+      </button>
+    </div>
+
+    <p class="login-footer">Resume Analyzer Platform &copy; 2025</p>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    function togglePass() {
+      const p = document.getElementById('password');
+      p.type = p.type === 'password' ? 'text' : 'password';
+    }
+    async function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const err = document.getElementById('errorMsg');
+      err.style.display = 'none';
+
+      if (!username || !password) {
+        err.textContent = 'Please fill in all fields.';
+        err.style.display = 'flex';
+        return;
+      }
+
+      setLoading('loginBtn','loginText','loginSpinner', true, 'Signing in…');
+
+      try {
+        const res = await fetch(`${API}/login`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({username, password})
+        });
+        const data = await res.json();
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+
+        if (data.role === 'interviewer') {
+          window.location.href = 'interviewer.html';
+        } else {
+          window.location.href = 'upload.html';
+        }
+      } catch(e) {
+        document.getElementById('errorMsg').textContent = 'Connection error. Is the backend running?';
+        document.getElementById('errorMsg').style.display = 'flex';
+        setLoading('loginBtn','loginText','loginSpinner', false, 'Sign In');
+      }
+    }
+
+    document.addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
+  </script>
+</body>
+</html>

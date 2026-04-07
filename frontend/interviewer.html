@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeIQ — Interviewer Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body class="app-page">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="url(#bg3)"/>
+        <path d="M10 26L18 10L26 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13 21H23" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <defs><linearGradient id="bg3" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6c63ff"/><stop offset="1" stop-color="#a855f7"/>
+        </linearGradient></defs>
+      </svg>
+      <span>ResumeIQ</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('candidates', this)">Candidates</button>
+      <button class="nav-tab" onclick="showTab('leaderboard', this)">Leaderboard</button>
+      <button class="nav-tab" onclick="showTab('jobmatch', this)">Job Match</button>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge interviewer-badge">Interviewer</span>
+      <button class="btn-ghost" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="page-content">
+
+    <!-- ── TAB: CANDIDATES ── -->
+    <div id="tab-candidates" class="tab-panel active">
+      <div class="panel-header">
+        <div>
+          <h2 class="page-title">All <span class="grad-text">Candidates</span></h2>
+          <p class="page-sub">All submitted resumes and their parsed data</p>
+        </div>
+        <button class="btn-primary" onclick="loadCandidates()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div id="candidatesLoading" class="loading-state">
+        <div class="spinner-lg"></div><p>Loading candidates…</p>
+      </div>
+
+      <div id="candidatesGrid" class="candidates-grid" style="display:none"></div>
+      <div id="candidatesEmpty" class="empty-state" style="display:none">
+        <div class="empty-icon">📭</div>
+        <p>No candidates yet. Ask them to upload their resumes!</p>
+      </div>
+    </div>
+
+    <!-- ── TAB: LEADERBOARD ── -->
+    <div id="tab-leaderboard" class="tab-panel" style="display:none">
+      <div class="panel-header">
+        <div>
+          <h2 class="page-title">🏆 <span class="grad-text">Leaderboard</span></h2>
+          <p class="page-sub">Candidates ranked by overall score</p>
+        </div>
+        <button class="btn-primary" onclick="loadLeaderboard()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div id="leaderboardLoading" class="loading-state">
+        <div class="spinner-lg"></div><p>Loading leaderboard…</p>
+      </div>
+
+      <div id="leaderboardTable" style="display:none">
+        <div class="lb-header">
+          <span>Rank</span><span>Name</span><span>Score</span><span>CGPA</span><span>Skills</span>
+        </div>
+        <div id="leaderboardRows"></div>
+      </div>
+      <div id="leaderboardEmpty" class="empty-state" style="display:none">
+        <div class="empty-icon">📊</div>
+        <p>No data yet to rank</p>
+      </div>
+    </div>
+
+    <!-- ── TAB: JOB MATCH ── -->
+    <div id="tab-jobmatch" class="tab-panel" style="display:none">
+      <div class="panel-header">
+        <div>
+          <h2 class="page-title">🎯 <span class="grad-text">Job Match</span></h2>
+          <p class="page-sub">Find the best-fit candidates for a role</p>
+        </div>
+      </div>
+
+      <div class="card jm-input-card">
+        <label class="form-label">Required Skills <span class="muted">(comma separated)</span></label>
+        <div class="jm-input-row">
+          <input type="text" id="skillsInput" class="form-input" placeholder="e.g. Python, Machine Learning, SQL, FastAPI"/>
+          <button class="btn-primary" onclick="runJobMatch()" id="matchBtn">
+            <span id="matchText">Find Matches</span>
+            <div id="matchSpinner" class="spinner" style="display:none"></div>
+          </button>
+        </div>
+        <div class="skill-chips" id="skillChips"></div>
+      </div>
+
+      <div id="matchResults" style="display:none">
+        <h3 class="section-title" style="margin-bottom:16px">Match Results</h3>
+        <div id="matchList" class="match-list"></div>
+      </div>
+      <div id="matchEmpty" class="empty-state" style="display:none">
+        <div class="empty-icon">🔍</div>
+        <p>No candidates matched those skills</p>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+
+  <!-- CANDIDATE MODAL -->
+  <div id="modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Candidate Detail</h3>
+        <button class="btn-remove" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    guardAuth('interviewer');
+
+    let currentTab = 'candidates';
+
+    function showTab(tab, el) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      el.classList.add('active');
+      currentTab = tab;
+      if (tab === 'candidates') loadCandidates();
+      if (tab === 'leaderboard') loadLeaderboard();
+    }
+
+    // ── CANDIDATES ──
+    async function loadCandidates() {
+      show('candidatesLoading'); hide('candidatesGrid'); hide('candidatesEmpty');
+      try {
+        const data = await authFetch(`${API}/candidates`);
+        hide('candidatesLoading');
+        if (!data || data.length === 0) { show('candidatesEmpty'); return; }
+        show('candidatesGrid');
+        const grid = document.getElementById('candidatesGrid');
+        grid.innerHTML = data.map(c => candidateCard(c)).join('');
+      } catch(e) {
+        hide('candidatesLoading');
+        show('candidatesEmpty');
+      }
+    }
+
+    function candidateCard(c) {
+      const score = c.score || 0;
+      const color = score >= 70 ? '#43e97b' : score >= 40 ? '#f5c842' : '#ff6584';
+      const skills = (c.skills || []).slice(0,4);
+      const rest = (c.skills || []).length - 4;
+      return `<div class="card candidate-card" onclick="openCandidate(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+        <div class="cc-top">
+          <div class="cc-avatar">${(c.name||'?')[0].toUpperCase()}</div>
+          <div class="cc-info">
+            <div class="cc-name">${escHtml(c.name||'Unknown')}</div>
+            <div class="cc-cgpa">CGPA: ${c.cgpa||'—'}</div>
+          </div>
+          <div class="cc-score" style="color:${color};border-color:${color}20;background:${color}12">${score}<span>/100</span></div>
+        </div>
+        <div class="cc-skills">
+          ${skills.map(s=>`<span class="tag">${escHtml(s)}</span>`).join('')}
+          ${rest>0?`<span class="tag tag-more">+${rest}</span>`:''}
+        </div>
+        <div class="cc-footer">
+          <span class="view-link">View Details →</span>
+          ${c.resume ? `<a href="${API}/resume/${encodeURIComponent(c.name)}" target="_blank" class="btn-link" onclick="event.stopPropagation()">📄 Resume</a>` : ''}
+        </div>
+      </div>`;
+    }
+
+    function openCandidate(c) {
+      document.getElementById('modalTitle').textContent = c.name || 'Candidate';
+      const score = c.score||0;
+      const color = score>=70?'#43e97b':score>=40?'#f5c842':'#ff6584';
+      const projects = c.projects||{};
+      const projArr = typeof projects==='object'&&!Array.isArray(projects)
+        ? Object.entries(projects).map(([k,v])=>`${k} (weight: ${v})`)
+        : (Array.isArray(projects)?projects:[]);
+
+      document.getElementById('modalBody').innerHTML = `
+        <div class="modal-score" style="color:${color}">Score: ${score}/100</div>
+        <div class="modal-grid">
+          <div class="modal-section">
+            <div class="modal-sec-title">CGPA</div>
+            <div class="modal-sec-val">${c.cgpa||'—'}</div>
+          </div>
+          <div class="modal-section">
+            <div class="modal-sec-title">Skills (${(c.skills||[]).length})</div>
+            <div class="tags-wrap">${(c.skills||[]).map(s=>`<span class="tag">${escHtml(s)}</span>`).join('')}</div>
+          </div>
+          <div class="modal-section">
+            <div class="modal-sec-title">Certifications</div>
+            <div class="tags-wrap">${(c.certifications||[]).map(s=>`<span class="tag tag-gold">${escHtml(s)}</span>`).join('')||'<span class="muted">None detected</span>'}</div>
+          </div>
+          <div class="modal-section">
+            <div class="modal-sec-title">Projects</div>
+            <div class="tags-wrap">${projArr.map(s=>`<span class="tag tag-purple">${escHtml(s)}</span>`).join('')||'<span class="muted">None detected</span>'}</div>
+          </div>
+        </div>
+        ${c.resume?`<a href="${API}/resume/${encodeURIComponent(c.name)}" target="_blank" class="btn-primary" style="text-decoration:none;display:inline-flex;margin-top:16px">📄 View Resume</a>`:''}
+      `;
+      document.getElementById('modal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('modal').style.display='none'; }
+
+    // ── LEADERBOARD ──
+    async function loadLeaderboard() {
+      show('leaderboardLoading'); hide('leaderboardTable'); hide('leaderboardEmpty');
+      try {
+        const data = await authFetch(`${API}/leaderboard`);
+        hide('leaderboardLoading');
+        const rows = data.leaderboard || [];
+        if (!rows.length) { show('leaderboardEmpty'); return; }
+        show('leaderboardTable');
+        document.getElementById('leaderboardRows').innerHTML = rows.map(r => lbRow(r)).join('');
+      } catch(e) {
+        hide('leaderboardLoading'); show('leaderboardEmpty');
+      }
+    }
+
+    function lbRow(r) {
+      const medal = r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':'';
+      const color = r.score>=70?'#43e97b':r.score>=40?'#f5c842':'#ff6584';
+      return `<div class="lb-row ${r.rank<=3?'lb-top':''}">
+        <span class="lb-rank">${medal||'#'+r.rank}</span>
+        <span class="lb-name">${escHtml(r.name||'—')}</span>
+        <span class="lb-score" style="color:${color}">${r.score}/100</span>
+        <span class="lb-cgpa">${r.cgpa||'—'}</span>
+        <span class="lb-skills">${(r.skills||[]).slice(0,3).map(s=>`<span class="tag">${escHtml(s)}</span>`).join('')}</span>
+      </div>`;
+    }
+
+    // ── JOB MATCH ──
+    const skillChipsArr = [];
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('skillsInput').addEventListener('keydown', e => {
+        if(e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const val = e.target.value.trim().replace(/,/g,'');
+          if(val) { addChip(val); e.target.value=''; }
+        }
+      });
+    });
+    function addChip(s) {
+      if(skillChipsArr.includes(s)) return;
+      skillChipsArr.push(s);
+      renderChips();
+    }
+    function removeChip(s) {
+      skillChipsArr.splice(skillChipsArr.indexOf(s),1);
+      renderChips();
+    }
+    function renderChips() {
+      document.getElementById('skillChips').innerHTML = skillChipsArr.map(s=>
+        `<span class="chip">${escHtml(s)}<button onclick="removeChip('${escHtml(s)}')" class="chip-remove">✕</button></span>`
+      ).join('');
+    }
+
+    async function runJobMatch() {
+      // get skills from chips + input field
+      const raw = document.getElementById('skillsInput').value.trim();
+      if(raw) { raw.split(',').forEach(s => { if(s.trim()) addChip(s.trim()); }); document.getElementById('skillsInput').value=''; }
+      const allSkills = [...skillChipsArr];
+      if(!allSkills.length) { alert('Enter at least one skill.'); return; }
+
+      setLoading('matchBtn','matchText','matchSpinner', true, 'Matching…');
+      hide('matchResults'); hide('matchEmpty');
+
+      try {
+        const data = await authFetch(`${API}/job_match`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({required_skills: allSkills})
+        });
+        setLoading('matchBtn','matchText','matchSpinner', false, 'Find Matches');
+        const results = data.results || [];
+        if(!results.length) { show('matchEmpty'); return; }
+        show('matchResults');
+        document.getElementById('matchList').innerHTML = results.map(r => matchCard(r, allSkills)).join('');
+      } catch(e) {
+        setLoading('matchBtn','matchText','matchSpinner', false, 'Find Matches');
+        show('matchEmpty');
+      }
+    }
+
+    function matchCard(c, required) {
+      const pct = c.match_percent || 0;
+      const matched = c.matched_skills || [];
+      const color = pct>=70?'#43e97b':pct>=40?'#f5c842':'#ff6584';
+      return `<div class="card match-card">
+        <div class="mc-left">
+          <div class="cc-avatar">${(c.name||'?')[0].toUpperCase()}</div>
+          <div>
+            <div class="cc-name">${escHtml(c.name||'—')}</div>
+            <div class="cc-cgpa">Score: ${c.score||0}/100 &nbsp;·&nbsp; CGPA: ${c.cgpa||'—'}</div>
+          </div>
+        </div>
+        <div class="mc-right">
+          <div class="match-pct" style="color:${color}">${pct}%</div>
+          <div class="match-bar-track"><div class="match-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          <div class="matched-skills">
+            ${required.map(s => `<span class="tag ${matched.includes(s)?'tag-match':'tag-miss'}">${escHtml(s)}</span>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // Load candidates on start
+    loadCandidates();
+  </script>
+</body>
+</html>
